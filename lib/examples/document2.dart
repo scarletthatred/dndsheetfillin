@@ -9,24 +9,14 @@ Future<Uint8List> generateDocument(PdfPageFormat format, List<Map<String, dynami
   items.sort((a, b) => (a['Company'] ?? "").compareTo(b['Company'] ?? ""));  // Ensure sorting
 
   final doc = pw.Document();
-  // final image = pw.MemoryImage(
-  //   (await rootBundle.load('lib/images/turnkeyLogo.png')).buffer.asUint8List(),
-  // );
 
 
 
   doc.addPage(
       pw.MultiPage(
         build: (context) => [
-          // pw.Container(
-          //   alignment: pw.Alignment.topLeft,
-          //   child: pw.Image(image, width: 100, height: 100),
-          // ),
-
-
           pw.Paragraph(text: "Contacts Listed By Company:"),
           pw.Table.fromTextArray(
-
             cellAlignment: pw.Alignment.centerLeft,
             cellStyle: const pw.TextStyle(fontSize: 10),
             headerAlignment: pw.Alignment.center,

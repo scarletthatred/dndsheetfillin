@@ -20,10 +20,11 @@ class MyApp2 extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('On-site Inventory List'),
+          title: const Text('D&D App'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {Navigator.of(context).pop();
+            },
           ),
         ),
         body: PdfPreview(
