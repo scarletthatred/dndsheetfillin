@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:dndsheetfillin/parts/edit.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_material_pickers/helpers/show_number_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'app.dart';
+
 
 class CharacterSheet extends StatefulWidget {
   const CharacterSheet({super.key, required this.title});
@@ -37,7 +37,8 @@ class _MyHomePageState extends State<CharacterSheet> {
     String? encodedData = prefs.getString('Characters');
     if (encodedData != null) {
       setState(() {
-        characterItems = List<Map<String, dynamic>>.from(json.decode(encodedData));
+        characterItems =
+        List<Map<String, dynamic>>.from(json.decode(encodedData));
       });
     }
   }
@@ -48,9 +49,9 @@ class _MyHomePageState extends State<CharacterSheet> {
   String characterClass = "Fighter";
   String race = "Aarakocra";
   String characterName = "";
-  int characterLevel = 0;
+  int characterLevel = 1;
   List<String> names = [];
-  List<String> raceList =[
+  List<String> raceList = [
     'Aarakocra',
     'Aasimar',
     'Aasimar-Fallen',
@@ -58,6 +59,7 @@ class _MyHomePageState extends State<CharacterSheet> {
     'Aasimar-Scourge',
     'Autognome',
     'Bugbear',
+    'Cat-Folk',
     'Centaur',
     'Changeling',
     'ChromaticDragonborn-Black',
@@ -217,6 +219,13 @@ class _MyHomePageState extends State<CharacterSheet> {
     'Warforged-Skirmisher',
     'Yuan-TiPureblood'
   ];
+  int strength = 1;
+  int dexterity=1;
+  int constitution=1;
+  int intelligence = 1;
+  int wisdom = 1;
+  int charisma = 1;
+
   ///todo add the notes section for job notes and labor hours
   List<String> classes = [
     "Fighter",
@@ -302,15 +311,18 @@ class _MyHomePageState extends State<CharacterSheet> {
   }
 
   void edit(int item) {
-    editCharacterBasicsDialog(context, item, characterItems, raceList,classes, (index, newDetails){
+    editCharacterBasicsDialog(
+        context, item, characterItems, raceList, classes, (index, newDetails) {
       setState(() {
         characterItems[index] = newDetails;
         saveItems();
       });
     });
   }
+
   void character(int item) {
-    showCharacterDialog(context, item, characterItems, raceList,classes, (index, newDetails) {
+    showCharacterDialog(
+        context, item, characterItems, raceList, classes, (index, newDetails) {
       setState(() {
         characterItems[index] = newDetails;
         saveItems();
@@ -328,13 +340,13 @@ class _MyHomePageState extends State<CharacterSheet> {
 
   List<Widget> buildItemList(bool portrait) {
     List<Widget> list = [];
-    if(portrait) {
+    if (portrait) {
       for (int i = 0; i < characterItems.length; i++) {
         list.add(
           Column(
             children: [
               TextButton(
-                onPressed: () =>character(i),
+                onPressed: () => character(i),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -367,7 +379,7 @@ class _MyHomePageState extends State<CharacterSheet> {
         );
       }
     }
-    else{
+    else {
       for (int i = 0; i < characterItems.length; i++) {
         list.add(
           Column(
@@ -385,11 +397,13 @@ class _MyHomePageState extends State<CharacterSheet> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
-                              child: Text("Character Name: ${characterItems[i]["name"]}",
+                              child: Text(
+                                  "Character Name: ${characterItems[i]["name"]}",
                                   overflow: TextOverflow.ellipsis),
                             ),
                             Flexible(
-                              child: Text("Class: ${characterItems[i]["class"]}",
+                              child: Text(
+                                  "Class: ${characterItems[i]["class"]}",
                                   overflow: TextOverflow.ellipsis),
                             ),
                           ],
@@ -397,7 +411,8 @@ class _MyHomePageState extends State<CharacterSheet> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Flexible(child: Text("Race: ${characterItems[i]["race"]}",
+                            Flexible(child: Text(
+                                "Race: ${characterItems[i]["race"]}",
                                 overflow: TextOverflow.ellipsis)),
 
                           ],
@@ -437,138 +452,237 @@ class _MyHomePageState extends State<CharacterSheet> {
   }
 
 
-
   @override
   Widget build(BuildContext context) {
     loadItems();
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MyApp2(itemsList: characterItems),
-                ),
-              );
-            },
-            icon: const Icon(Icons.picture_as_pdf),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                    width: 400,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: TextField(
-                            readOnly: false,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText:
-                              'Name', // Label for the new field
-                            ),
-                            onChanged: (value) => characterName =
-                                value, // Update title state on change
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: DropdownButtonFormField<String>(
-                            value: race,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Race',
-                            ),
-                            onChanged: (newValue) => race = newValue!,
-                            items: raceList.map<DropdownMenuItem<String>>((value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: DropdownButtonFormField<String>(
-                            value: characterClass,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Class',
-                            ),
-                            onChanged: (newValue) => race = newValue!,
-                            items: classes.map<DropdownMenuItem<String>>((value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-
-                      ],
-                    )),
-                TextButton(
-                    onPressed: () {
-                      if (characterClass == "" || characterClass.isEmpty) {
-                        errorCode(0);
-                      } else {
-                        if (race == "" ||
-                            race.isEmpty) {
-                          errorCode(0);
-                        }
-                        if (!names.contains(characterName)) {
-                          names.add(characterName);
-                          names
-                              .sort(); // Optional: Sort the list alphabetically
-                        }
-                        details = {
-                          "class": characterClass,
-                          "race": race,
-                          "name": characterName,
-                        };
-                        characterItems.add(details);
-                        sortItemsBytitle();
-                      }
-
-                      details = {};
-                      saveItems();
-                      setState(() {});
-                    },
-                    child: const Row(
-                      children: [
-                        Text("Add Item"),
-                        Icon(Icons.add),
-                      ],
-                    )),
-              ],
+        appBar: AppBar(
+          backgroundColor: Theme
+              .of(context)
+              .colorScheme
+              .inversePrimary,
+          title: Text(widget.title),
+          actions: [
+            IconButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MyApp2(itemsList: characterItems),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.picture_as_pdf),
             ),
-            Expanded(
-              child: Container(
-                color: Colors.grey,
-                child: SingleChildScrollView(
-                  child: Column(children: buildItemList(true)),
-                ),
-              ),
-            ),
-
           ],
         ),
-      )
+        body: SingleChildScrollView(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                      width: 400,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: TextField(
+                              readOnly: false,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText:
+                                'Name', // Label for the new field
+                              ),
+                              onChanged: (value) =>
+                              characterName =
+                                  value, // Update title state on change
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: DropdownButtonFormField<String>(
+                              value: race,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Race',
+                              ),
+                              onChanged: (newValue) => race = newValue!,
+                              items: raceList.map<DropdownMenuItem<String>>((
+                                  value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: DropdownButtonFormField<String>(
+                              value: characterClass,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Class',
+                              ),
+                              onChanged: (newValue) => race = newValue!,
+                              items: classes.map<DropdownMenuItem<String>>((
+                                  value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          Padding(padding: const EdgeInsets.all(10),
+                            child: TextButton(onPressed: () {
+                              showMaterialNumberPicker(
+                                context: context,
+                                title: 'Character Level',
+                                maxNumber: 20,
+                                minNumber: 1,
+                                selectedNumber: characterLevel,
+                                onChanged: (value) => setState(() => characterLevel = value),
+                              );
+                            }, child: Text("Level:$characterLevel"))
+                          ),
+                          Row(mainAxisAlignment:MainAxisAlignment.spaceEvenly,children: [
+                            Padding(padding: const EdgeInsets.all(10),
+                              child: TextButton(onPressed: () {
+                                showMaterialNumberPicker(
+                                  context: context,
+                                  title: 'Strength',
+                                  maxNumber: 20,
+                                  minNumber: 1,
+                                  selectedNumber: strength,
+                                  onChanged: (value) => setState(() => strength = value),
+                                );
+                              }, child: Text("Strength\n$strength",textAlign: TextAlign.center,))
+                          ),
+                            Padding(padding: const EdgeInsets.all(10),
+                                child: TextButton(onPressed: () {
+                                  showMaterialNumberPicker(
+                                    context: context,
+                                    title: 'Dexterity',
+                                    maxNumber: 20,
+                                    minNumber: 1,
+                                    selectedNumber: dexterity,
+                                    onChanged: (value) => setState(() => dexterity = value),
+                                  );
+                                }, child: Text("Dexterity\n$dexterity",textAlign: TextAlign.center,))
+                            ),],),
+                          Row(mainAxisAlignment:MainAxisAlignment.spaceEvenly,children: [
+                           Padding(padding: const EdgeInsets.all(10),
+                             child: TextButton(onPressed: () {
+                               showMaterialNumberPicker(
+                                 context: context,
+                                 title: 'Constitution',
+                                 maxNumber: 20,
+                                 minNumber: 1,
+                                 selectedNumber: constitution,
+                                 onChanged: (value) => setState(() => constitution = value),
+                               );
+                             }, child: Text("Constitution\n$constitution",textAlign: TextAlign.center,))
+                         ),
+                           Padding(padding: const EdgeInsets.all(10),
+                               child: TextButton(onPressed: () {
+                                 showMaterialNumberPicker(
+                                   context: context,
+                                   title: 'Intelligence',
+                                   maxNumber: 20,
+                                   minNumber: 1,
+                                   selectedNumber: intelligence,
+                                   onChanged: (value) => setState(() => intelligence = value),
+                                 );
+                               }, child: Text("Intelligence\n$intelligence",textAlign: TextAlign.center,))
+                           ),],),
+                          Row(mainAxisAlignment:MainAxisAlignment.spaceEvenly,children: [
+                            Padding(padding: const EdgeInsets.all(10),
+                              child: TextButton(onPressed: () {
+                                showMaterialNumberPicker(
+                                  context: context,
+                                  title: 'Wisdom',
+                                  maxNumber: 20,
+                                  minNumber: 1,
+                                  selectedNumber: wisdom,
+                                  onChanged: (value) => setState(() => wisdom = value),
+                                );
+                              }, child: Text("Wisdom\n$wisdom",textAlign: TextAlign.center,))
+                          ),
+                            Padding(padding: const EdgeInsets.all(10),
+                                child: TextButton(onPressed: () {
+                                  showMaterialNumberPicker(
+                                    context: context,
+                                    title: 'Charisma',
+                                    maxNumber: 20,
+                                    minNumber: 1,
+                                    selectedNumber: charisma,
+                                    onChanged: (value) => setState(() => charisma = value),
+                                  );
+                                }, child: Text("Charisma\n$charisma",textAlign: TextAlign.center,))
+                            ),],),
+
+                        ],
+                      )),
+                  TextButton(
+                      onPressed: () {
+                        if (characterClass == "" || characterClass.isEmpty) {
+                          errorCode(0);
+                        } else {
+                          if (race == "" ||
+                              race.isEmpty) {
+                            errorCode(0);
+                          }
+                          if (!names.contains(characterName)) {
+                            names.add(characterName);
+                            names
+                                .sort(); // Optional: Sort the list alphabetically
+                          }
+                          details = {
+                            "class": characterClass,
+                            "race": race,
+                            "name": characterName,
+                            "level":characterLevel,
+                            "strength":strength,
+                            "dexterity":dexterity,
+                            "constitution":constitution,
+                            "intelligence":intelligence,
+                            "wisdom":wisdom,
+                            "charisma":charisma
+                          };
+                          characterItems.add(details);
+                          sortItemsBytitle();
+                        }
+
+                        details = {};
+                        saveItems();
+                        setState(() {});
+                      },
+                      child: const Row(
+                        children: [
+                          Text("Add Item"),
+                          Icon(Icons.add),
+                        ],
+                      )),
+                ],
+              ),
+              Expanded(
+                child: Container(
+                  color: Colors.grey,
+                  child: SingleChildScrollView(
+                    child: Column(children: buildItemList(true)),
+                  ),
+                ),
+              ),
+
+            ],
+          ),
+        )
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+
 Future<void> showEditDialog(BuildContext context, int item, List<Map<String, dynamic>> notesItems, List<String> categories, Function onUpdate) async {
   String noteTitleEdit = notesItems[item]["title"];
   String noteCategoryEdit = notesItems[item]["category"];
@@ -109,7 +110,14 @@ Future<void> showCharacterDialog(BuildContext context, int item, List<Map<String
   String name = notesItems[item]["name"];
   String race = notesItems[item]["race"];
   String classView = notesItems[item]["class"];
-  Map<String, dynamic> detailsEdit = {};
+  int strength = notesItems[item]["strength"];
+  int dexterity= notesItems[item]["dexterity"];
+  int constitution=notesItems[item]["constitution"];
+  int intelligence = notesItems[item]["intelligence"];
+  int wisdom = notesItems[item]["wisdom"];
+  int charisma = notesItems[item]["charisma"];
+  int level = notesItems[item]["level"];
+
 
   return showDialog<void>(
     context: context,
@@ -129,69 +137,70 @@ Future<void> showCharacterDialog(BuildContext context, int item, List<Map<String
           child:
           SingleChildScrollView(
             padding: const EdgeInsets.all(8.0),
-            child: HtmlWidget(""""<!DOCTYPE html>
+            child: HtmlWidget("""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D&D Character Sheet</title>
 </head>
-<body>
-    <div class="character-sheet">
-        <div class="sheet-header">
-            <h1>Character Name</h1>
-            <p>Class: Fighter | Level: 13 | Race: Fairy</p>
+<body style="font-family: Georgia, serif; background-color: #f4f1de; color: #333; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <div style="width: 800px; background: #fff; border: 2px solid #444; border-radius: 8px; padding: 20px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);">
+        <div style="text-align: center; border-bottom: 2px solid #444; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="margin: 0; font-size: 2rem; letter-spacing: 2px;">"""+ name + """</h1>
+            <p>Class: """+classView+""" | Level: """+"$level"+""" | Race: """+race+"""</p>
         </div>
 
-        <div class="section">
-            <h2>Attributes</h2>
-            <div class="attributes">
-                <div class="attribute">
-                    <h3>Strength</h3>
-                    <div class="value">18</div>
+        <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.5rem; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">Attributes</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                <div style="text-align: center; border: 2px solid #444; border-radius: 4px; padding: 10px;">
+                    <h3 style="margin: 0 0 10px; font-size: 1.2rem;">Strength</h3>
+                    <div style="font-size: 1.5rem; font-weight: bold;">"""+"$strength"+"""</div>
                 </div>
-                <div class="attribute">
-                    <h3>Dexterity</h3>
-                    <div class="value">16</div>
+                <div style="text-align: center; border: 2px solid #444; border-radius: 4px; padding: 10px;">
+                    <h3 style="margin: 0 0 10px; font-size: 1.2rem;">Dexterity</h3>
+                    <div style="font-size: 1.5rem; font-weight: bold;">"""+"$dexterity"+"""</div>
                 </div>
-                <div class="attribute">
-                    <h3>Constitution</h3>
-                    <div class="value">14</div>
+                <div style="text-align: center; border: 2px solid #444; border-radius: 4px; padding: 10px;">
+                    <h3 style="margin: 0 0 10px; font-size: 1.2rem;">Constitution</h3>
+                    <div style="font-size: 1.5rem; font-weight: bold;">"""+"$constitution"+"""</div>
                 </div>
-                <div class="attribute">
-                    <h3>Intelligence</h3>
-                    <div class="value">12</div>
+                <div style="text-align: center; border: 2px solid #444; border-radius: 4px; padding: 10px;">
+                    <h3 style="margin: 0 0 10px; font-size: 1.2rem;">Intelligence</h3>
+                    <div style="font-size: 1.5rem; font-weight: bold;">"""+"$intelligence"+"""</div>
                 </div>
-                <div class="attribute">
-                    <h3>Wisdom</h3>
-                    <div class="value">10</div>
+                <div style="text-align: center; border: 2px solid #444; border-radius: 4px; padding: 10px;">
+                    <h3 style="margin: 0 0 10px; font-size: 1.2rem;">Wisdom</h3>
+                    <div style="font-size: 1.5rem; font-weight: bold;">"""+"$wisdom"+"""</div>
                 </div>
-                <div class="attribute">
-                    <h3>Charisma</h3>
-                    <div class="value">8</div>
+                <div style="text-align: center; border: 2px solid #444; border-radius: 4px; padding: 10px;">
+                    <h3 style="margin: 0 0 10px; font-size: 1.2rem;">Charisma</h3>
+                    <div style="font-size: 1.5rem; font-weight: bold;">"""+"$charisma"+"""</div>
                 </div>
             </div>
         </div>
 
-        <div class="section">
-            <h2>Equipment</h2>
-            <ul class="equipment">
-                <li>Longsword</li>
-                <li>Shield</li>
-                <li>Chainmail</li>
-                <li>Health Potion</li>
+        <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.5rem; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">Equipment</h2>
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 5px;">Longsword</li>
+                <li style="margin-bottom: 5px;">Shield</li>
+                <li style="margin-bottom: 5px;">Chainmail</li>
+                <li style="margin-bottom: 5px;">Health Potion</li>
             </ul>
         </div>
 
-        <div class="section">
-            <h2>Notes</h2>
-            <div class="notes">
+        <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.5rem; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">Notes</h2>
+            <div style="border: 2px dashed #444; padding: 10px; min-height: 100px;">
                 <p>Enter additional character details or story notes here...</p>
             </div>
         </div>
     </div>
 </body>
 </html>
+
 """,)
           ),
         ),
