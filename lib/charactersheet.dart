@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:dndsheetfillin/parts/edit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_material_pickers/helpers/show_number_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
+import 'package:path/path.dart' as path;
 
 
 class CharacterSheet extends StatefulWidget {
@@ -225,8 +229,47 @@ class _MyHomePageState extends State<CharacterSheet> {
   int intelligence = 1;
   int wisdom = 1;
   int charisma = 1;
+  int strengthRaceMod = 0;
+  int dexterityRaceMod =0;
+  int constitutionRaceMod =0;
+  int intelligenceRaceMod  = 0;
+  int wisdomRaceMod  = 0;
+  int charismaRaceMod  = 0;
+  String savedImagePath = "";
+  File? _profileImage; // File to store the selected image
 
-  ///todo add the notes section for job notes and labor hours
+  final ImagePicker _picker = ImagePicker();
+
+
+
+  Future<void> _pickAndSaveImage() async {
+    try {
+      // Pick an image
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxHeight: 600, // Optional: resize the image
+        maxWidth: 600,
+      );
+
+      if (pickedFile != null) {
+        // Get the document directory
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+
+        // Create a new file path in the document directory
+        final String fileName = path.basename(pickedFile.path);
+        savedImagePath = path.join(appDocDir.path, fileName);
+
+        // Copy the selected image to the document directory
+        final File savedImage = await File(pickedFile.path).copy(savedImagePath);
+        setState(() {
+          _profileImage = savedImage; // Update the state with the saved image
+        });
+      }
+    } catch (e) {
+      print('Error picking and saving image: $e');
+    }
+  }
+
   List<String> classes = [
     "Fighter",
     "Barbarian",
@@ -325,7 +368,6 @@ class _MyHomePageState extends State<CharacterSheet> {
         context, item, characterItems, raceList, classes, (index, newDetails) {
       setState(() {
         characterItems[index] = newDetails;
-        saveItems();
       });
     });
   }
@@ -338,10 +380,11 @@ class _MyHomePageState extends State<CharacterSheet> {
     });
   }
 
-  List<Widget> buildItemList(bool portrait) {
+  List<Widget> buildItemList() {
+    File imageFile;
     List<Widget> list = [];
-    if (portrait) {
       for (int i = 0; i < characterItems.length; i++) {
+          imageFile = File(characterItems[i]["characterPicture"]);
         list.add(
           Column(
             children: [
@@ -351,6 +394,11 @@ class _MyHomePageState extends State<CharacterSheet> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: FileImage(imageFile) // Display selected image
+                    ),
                     Text("Character Name: ${characterItems[i]["name"]}"),
                     Text("|"),
                     Flexible(
@@ -377,72 +425,8 @@ class _MyHomePageState extends State<CharacterSheet> {
             ],
           ),
         );
-      }
-    }
-    else {
-      for (int i = 0; i < characterItems.length; i++) {
-        list.add(
-          Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Main content column
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                  "Character Name: ${characterItems[i]["name"]}",
-                                  overflow: TextOverflow.ellipsis),
-                            ),
-                            Flexible(
-                              child: Text(
-                                  "Class: ${characterItems[i]["class"]}",
-                                  overflow: TextOverflow.ellipsis),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(child: Text(
-                                "Race: ${characterItems[i]["race"]}",
-                                overflow: TextOverflow.ellipsis)),
 
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Icons column
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => edit(i),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => deleteItem(i),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const Divider(), // Adds a horizontal line between items
-            ],
-          ),
-        );
       }
-    }
     return list;
   }
 
@@ -489,68 +473,410 @@ class _MyHomePageState extends State<CharacterSheet> {
                       width: 400,
                       child: Column(
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: TextField(
-                              readOnly: false,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                labelText:
-                                'Name', // Label for the new field
+                          Row(
+                            children: [
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Display profile image or placeholder
+                                  CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor: Colors.grey[300],
+                                    backgroundImage: _profileImage != null
+                                        ? FileImage(_profileImage!) // Display selected image
+                                        : null, // Show placeholder if no image is selected
+                                    child: _profileImage == null
+                                        ? Icon(
+                                      Icons.person,
+                                      size: 60,
+                                      color: Colors.white,
+                                    )
+                                        : null,
+                                  ),
+                                  SizedBox(height: 20),
+                                  // Button to pick and save image
+                                  ElevatedButton(
+                                    onPressed: _pickAndSaveImage,
+                                    child: Text("Pick Profile Picture"),
+                                  ),
+                                ],
                               ),
-                              onChanged: (value) =>
-                              characterName =
-                                  value, // Update title state on change
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: DropdownButtonFormField<String>(
-                              value: race,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                labelText: 'Race',
+                              Padding(padding: const EdgeInsets.all(10),
+                                  child: TextButton(onPressed: () {
+                                    showMaterialNumberPicker(
+                                      context: context,
+                                      title: 'Character Level',
+                                      maxNumber: 20,
+                                      minNumber: 1,
+                                      selectedNumber: characterLevel,
+                                      onChanged: (value) => setState(() => characterLevel = value),
+                                    );
+                                  }, child: Text("Level:$characterLevel"))
                               ),
-                              onChanged: (newValue) => race = newValue!,
-                              items: raceList.map<DropdownMenuItem<String>>((
-                                  value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                            ),
+                            ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: DropdownButtonFormField<String>(
-                              value: characterClass,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                labelText: 'Class',
+                          Column(
+                            children: [
+                              SizedBox(
+                                width: 300,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: TextField(
+                                    readOnly: false,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText:
+                                      'Name', // Label for the new field
+                                    ),
+                                    onChanged: (value) =>
+                                    characterName =
+                                        value, // Update title state on change
+                                  ),
+                                ),
                               ),
-                              onChanged: (newValue) => race = newValue!,
-                              items: classes.map<DropdownMenuItem<String>>((
-                                  value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                            ),
+                              SizedBox(
+                                width: 300,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: DropdownButtonFormField<String>(
+                                    value: race,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Race',
+                                    ),
+                                    onChanged: (newValue) {race = newValue!;
+                                      ///todo fix me
+                                      strengthRaceMod=0;
+                                      constitutionRaceMod = 0;
+                                      wisdomRaceMod = 0;
+                                      charismaRaceMod = 0;
+                                      intelligenceRaceMod = 0;
+                                      dexterityRaceMod=0;
+                                    setState((){  switch (race) {
+                                      case "Aarakocra": {
+                                        dexterityRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Aasimar": {
+                                        wisdomRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Aasimar (Fallen)": {
+                                        strengthRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Aasimar (Protector)": {
+                                        wisdomRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Aasimar (Scourge)": {
+                                        constitutionRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Bugbear": {
+                                        strengthRaceMod = 2;
+                                        dexterityRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Centaur": {
+                                        strengthRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Changeling": {
+                                        // Assign +1 to any one stat
+                                        break;
+                                      }
+                                      case "Dragonborn": {
+                                        strengthRaceMod = 2;
+                                        charismaRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Dwarf (Duergar)": {
+                                        strengthRaceMod = 1;
+                                        constitutionRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Dwarf (Hill)": {
+                                        constitutionRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Dwarf (Mountain)": {
+                                        strengthRaceMod = 2;
+                                        constitutionRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Elf (Drow)": {
+                                        dexterityRaceMod = 2;
+                                        charismaRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Elf (Eladrin)": {
+                                        dexterityRaceMod = 2;
+                                        intelligenceRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Elf (High)": {
+                                        dexterityRaceMod = 2;
+                                        intelligenceRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Elf (Sea)": {
+                                        dexterityRaceMod = 2;
+                                        constitutionRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Elf (Wood)": {
+                                        dexterityRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Firbolg": {
+                                        strengthRaceMod = 1;
+                                        wisdomRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Genasi (Air)": {
+                                        dexterityRaceMod = 1;
+                                        constitutionRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Genasi (Earth)": {
+                                        strengthRaceMod = 1;
+                                        constitutionRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Genasi (Fire)": {
+                                        constitutionRaceMod = 2;
+                                        intelligenceRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Genasi (Water)": {
+                                        constitutionRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Githyanki": {
+                                        strengthRaceMod = 2;
+                                        intelligenceRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Githzerai": {
+                                        wisdomRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Gnome (Deep)": {
+                                        dexterityRaceMod = 1;
+                                        constitutionRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Gnome (Forest)": {
+                                        dexterityRaceMod = 1;
+                                        intelligenceRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Gnome (Rock)": {
+                                        constitutionRaceMod = 1;
+                                        intelligenceRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Goblin": {
+                                        dexterityRaceMod = 2;
+                                        constitutionRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Goliath": {
+                                        strengthRaceMod = 2;
+                                        constitutionRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Half-Elf": {
+                                        // Assign +1 to any two stats
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Half-Orc": {
+                                        strengthRaceMod = 2;
+                                        constitutionRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Halfling (Ghostwise)": {
+                                        dexterityRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Halfling (Lightfoot)": {
+                                        dexterityRaceMod = 2;
+                                        charismaRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Halfling (Stout)": {
+                                        dexterityRaceMod = 2;
+                                        constitutionRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Hobgoblin": {
+                                        constitutionRaceMod = 2;
+                                        intelligenceRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Human": {
+                                        strengthRaceMod = 1;
+                                        dexterityRaceMod = 1;
+                                        constitutionRaceMod = 1;
+                                        intelligenceRaceMod = 1;
+                                        wisdomRaceMod = 1;
+                                        charismaRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Human (Variant)": {
+                                        // Assign +1 to any two stats
+                                        break;
+                                      }
+                                      case "Kalashtar": {
+                                        wisdomRaceMod = 2;
+                                        charismaRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Kenku": {
+                                        dexterityRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Kobold": {
+                                        dexterityRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Leonin": {
+                                        strengthRaceMod = 1;
+                                        constitutionRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Lizardfolk": {
+                                        constitutionRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Loxodon": {
+                                        constitutionRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Minotaur": {
+                                        strengthRaceMod = 2;
+                                        constitutionRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Orc": {
+                                        strengthRaceMod = 2;
+                                        constitutionRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Satyr": {
+                                        dexterityRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Shifter (Beasthide)": {
+                                        strengthRaceMod = 1;
+                                        constitutionRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Shifter (Longtooth)": {
+                                        strengthRaceMod = 2;
+                                        dexterityRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Shifter (Swiftstride)": {
+                                        dexterityRaceMod = 2;
+                                        charismaRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Tabaxi": {
+                                        dexterityRaceMod = 2;
+                                        charismaRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Tiefling": {
+                                        intelligenceRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Tortle": {
+                                        strengthRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Triton": {
+                                        strengthRaceMod = 1;
+                                        constitutionRaceMod = 1;
+                                        charismaRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Vedalken": {
+                                        intelligenceRaceMod = 2;
+                                        wisdomRaceMod = 1;
+                                        break;
+                                      }
+                                      case "Verdan": {
+                                        constitutionRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Warforged": {
+                                        // Assign +1 to any one stat
+                                        constitutionRaceMod = 2;
+                                        break;
+                                      }
+                                      case "Yuan-ti Pureblood": {
+                                        intelligenceRaceMod = 1;
+                                        charismaRaceMod = 2;
+                                        break;
+                                      }
+                                    }});
+                                    },
+                                    items: raceList.map<DropdownMenuItem<String>>((
+                                        value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 300,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: DropdownButtonFormField<String>(
+                                    value: characterClass,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Class',
+                                    ),
+                                    onChanged: (newValue) => characterClass = newValue!,
+                                    items: classes.map<DropdownMenuItem<String>>((
+                                        value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          Padding(padding: const EdgeInsets.all(10),
-                            child: TextButton(onPressed: () {
-                              showMaterialNumberPicker(
-                                context: context,
-                                title: 'Character Level',
-                                maxNumber: 20,
-                                minNumber: 1,
-                                selectedNumber: characterLevel,
-                                onChanged: (value) => setState(() => characterLevel = value),
-                              );
-                            }, child: Text("Level:$characterLevel"))
-                          ),
+
+
                           Row(mainAxisAlignment:MainAxisAlignment.spaceEvenly,children: [
                             Padding(padding: const EdgeInsets.all(10),
                               child: TextButton(onPressed: () {
@@ -562,7 +888,7 @@ class _MyHomePageState extends State<CharacterSheet> {
                                   selectedNumber: strength,
                                   onChanged: (value) => setState(() => strength = value),
                                 );
-                              }, child: Text("Strength\n$strength",textAlign: TextAlign.center,))
+                              }, child: Text("Strength\n$strength +$strengthRaceMod",textAlign: TextAlign.center,))
                           ),
                             Padding(padding: const EdgeInsets.all(10),
                                 child: TextButton(onPressed: () {
@@ -574,7 +900,7 @@ class _MyHomePageState extends State<CharacterSheet> {
                                     selectedNumber: dexterity,
                                     onChanged: (value) => setState(() => dexterity = value),
                                   );
-                                }, child: Text("Dexterity\n$dexterity",textAlign: TextAlign.center,))
+                                }, child: Text("Dexterity\n$dexterity +$dexterityRaceMod",textAlign: TextAlign.center,))
                             ),],),
                           Row(mainAxisAlignment:MainAxisAlignment.spaceEvenly,children: [
                            Padding(padding: const EdgeInsets.all(10),
@@ -587,7 +913,7 @@ class _MyHomePageState extends State<CharacterSheet> {
                                  selectedNumber: constitution,
                                  onChanged: (value) => setState(() => constitution = value),
                                );
-                             }, child: Text("Constitution\n$constitution",textAlign: TextAlign.center,))
+                             }, child: Text("Constitution\n$constitution +$constitutionRaceMod",textAlign: TextAlign.center,))
                          ),
                            Padding(padding: const EdgeInsets.all(10),
                                child: TextButton(onPressed: () {
@@ -599,7 +925,7 @@ class _MyHomePageState extends State<CharacterSheet> {
                                    selectedNumber: intelligence,
                                    onChanged: (value) => setState(() => intelligence = value),
                                  );
-                               }, child: Text("Intelligence\n$intelligence",textAlign: TextAlign.center,))
+                               }, child: Text("Intelligence\n$intelligence +$intelligenceRaceMod",textAlign: TextAlign.center,))
                            ),],),
                           Row(mainAxisAlignment:MainAxisAlignment.spaceEvenly,children: [
                             Padding(padding: const EdgeInsets.all(10),
@@ -612,32 +938,30 @@ class _MyHomePageState extends State<CharacterSheet> {
                                   selectedNumber: wisdom,
                                   onChanged: (value) => setState(() => wisdom = value),
                                 );
-                              }, child: Text("Wisdom\n$wisdom",textAlign: TextAlign.center,))
+                              }, child: Text("Wisdom\n$wisdom +$wisdomRaceMod",textAlign: TextAlign.center,))
                           ),
                             Padding(padding: const EdgeInsets.all(10),
                                 child: TextButton(onPressed: () {
                                   showMaterialNumberPicker(
                                     context: context,
-                                    title: 'Charisma',
+                                    title:'Charisma',
                                     maxNumber: 20,
                                     minNumber: 1,
                                     selectedNumber: charisma,
                                     onChanged: (value) => setState(() => charisma = value),
                                   );
-                                }, child: Text("Charisma\n$charisma",textAlign: TextAlign.center,))
+                                }, child: Text("Charisma\n$charisma +$charismaRaceMod",textAlign: TextAlign.center,))
                             ),],),
 
                         ],
                       )),
                   TextButton(
                       onPressed: () {
-                        if (characterClass == "" || characterClass.isEmpty) {
+
+                        if (characterClass == "" || characterClass.isEmpty||race == "" ||
+                            race.isEmpty || savedImagePath == "" || savedImagePath.isEmpty) {
                           errorCode(0);
                         } else {
-                          if (race == "" ||
-                              race.isEmpty) {
-                            errorCode(0);
-                          }
                           if (!names.contains(characterName)) {
                             names.add(characterName);
                             names
@@ -648,17 +972,18 @@ class _MyHomePageState extends State<CharacterSheet> {
                             "race": race,
                             "name": characterName,
                             "level":characterLevel,
-                            "strength":strength,
-                            "dexterity":dexterity,
-                            "constitution":constitution,
-                            "intelligence":intelligence,
-                            "wisdom":wisdom,
-                            "charisma":charisma
+                            "strength":strength+strengthRaceMod,
+                            "dexterity":dexterity+dexterityRaceMod,
+                            "constitution":constitution+constitutionRaceMod,
+                            "intelligence":intelligence+intelligenceRaceMod,
+                            "wisdom":wisdom+wisdomRaceMod,
+                            "charisma":charisma+charismaRaceMod,
+                            "characterPicture":savedImagePath,
                           };
                           characterItems.add(details);
                           sortItemsBytitle();
                         }
-
+                        _profileImage = null;
                         details = {};
                         saveItems();
                         setState(() {});
@@ -675,7 +1000,7 @@ class _MyHomePageState extends State<CharacterSheet> {
                 child: Container(
                   color: Colors.grey,
                   child: SingleChildScrollView(
-                    child: Column(children: buildItemList(true)),
+                    child: Column(children: buildItemList()),
                   ),
                 ),
               ),
